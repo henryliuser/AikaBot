@@ -9,6 +9,12 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 
 client = discord.Client()
+audio_source = discord.AudioSource()
+voice_channel = discord.VoiceChannel()
+
+@voice_channel.event
+async def on_ready():
+    print("yeehaw")
 
 @client.event
 async def on_ready():
@@ -17,13 +23,6 @@ async def on_ready():
         f'{client.user} is connected to the following guild:\n'
         f'{guild.name}(id: {guild.id})'
     )
-
-# @client.event
-# async def on_member_join(member):
-#     await member.create_dm()
-#     await member.dm_channel.send(
-#         f'Hi {member.name}, welcome to my Discord server!'
-#     )
 
 @client.event
 async def on_message(message):
@@ -41,14 +40,26 @@ They try so hard to display their radiance. Trying to let us know they exist bef
 I admire that simple, honest wish.",
                    "Everything happens for a reason. The daily tragedies and misfortunes are all \
     meaningful events, leading toward an ideal conclusion. With that in mind, there probably isn't \
-really any meaningless misfortune."]
+really any meaningless misfortune.",
+                   "The actors on stage cannot ignore their scripts and do as they wish. If they \
+make a beautiful exit, I feel they fulfill their role.",
+                   "It might be for the better if there are amusing people around me. Because \
+any tragedy may seem a comedy, as long as I am with them.",
+                   "The beginning is the end, and the end is the beginning. Well then, \
+let us begin again. And to each, their own tale."
+                   ]
 
-    tempest_quotes = [""]
+    shakespeare_quotes = [
+        "The time is out of joint: O cursed spite / That ever I was born to set it right!* -- Hamlet",
+        "Forty thousand brothers / Could not with all their quantity of love / \
+Make up my sum.* -- Hamlet"
+    ]
 
     if message.content == 'aika!':
         response = random.choice(aika_quotes)
         await message.channel.send(response)
-    if message.content == "tempest!":
-        response = random.choice(tempest_quotes)
+    if message.content == "shake!":
+        response = "*" + random.choice(shakespeare_quotes)
         await message.channel.send(response)
+
 client.run(TOKEN)
