@@ -10,11 +10,11 @@ GUILD = os.getenv('DISCORD_GUILD')
 
 client = discord.Client()
 audio_source = discord.AudioSource()
-voice_channel = discord.VoiceChannel()
+# voice_channel = discord.VoiceChannel()
 
-@voice_channel.event
-async def on_ready():
-    print("yeehaw")
+# @voice_channel.event
+# async def on_ready():
+#     print("yeehaw")
 
 @client.event
 async def on_ready():
@@ -39,7 +39,7 @@ illuminating the whole truth.",
 They try so hard to display their radiance. Trying to let us know they exist before they disappear. \
 I admire that simple, honest wish.",
                    "Everything happens for a reason. The daily tragedies and misfortunes are all \
-    meaningful events, leading toward an ideal conclusion. With that in mind, there probably isn't \
+meaningful events, leading toward an ideal conclusion. With that in mind, there probably isn't \
 really any meaningless misfortune.",
                    "The actors on stage cannot ignore their scripts and do as they wish. If they \
 make a beautiful exit, I feel they fulfill their role.",
