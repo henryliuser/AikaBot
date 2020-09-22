@@ -2,13 +2,15 @@
 import os
 import random
 import discord
+from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 
-client = discord.Client()
+client = commands.Bot(command_prefix = '.')
+
 audio_source = discord.AudioSource()
 # voice_channel = discord.VoiceChannel()
 
@@ -23,6 +25,16 @@ async def on_ready():
         f'{client.user} is connected to the following guild:\n'
         f'{guild.name}(id: {guild.id})'
     )
+
+@client.command(pass_context = True)
+async def join(ctx):
+    channel = ctx.message.author.voice.voice_channel
+    print(ctx)
+    print(ctx.message)
+    print(ctx.message.author)
+    print(ctx.message.author.voice)
+
+    await client.join_voice_channel(channel)
 
 @client.event
 async def on_message(message):
