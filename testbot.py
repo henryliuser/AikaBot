@@ -23,6 +23,7 @@ async def join(ctx):
     print(ctx.message.author)
     print(ctx.message.author.voice)
     print(ctx.message.author.voice.channel)
+    print(channel)
 
 @client.command()
 async def leave(ctx):

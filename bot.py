@@ -9,7 +9,7 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 
-client = commands.Bot(command_prefix = '.')
+client = commands.Bot(command_prefix = '!')
 
 audio_source = discord.AudioSource()
 # voice_channel = discord.VoiceChannel()
@@ -21,26 +21,27 @@ audio_source = discord.AudioSource()
 @client.event
 async def on_ready():
     guild = discord.utils.get(client.guilds, name=GUILD)
+    await guild.channels[2].send("what up bitches")
     print(
         f'{client.user} is connected to the following guild:\n'
         f'{guild.name}(id: {guild.id})'
     )
 
-@client.command(pass_context = True)
+@client.command()
 async def join(ctx):
-    channel = ctx.message.author.voice.voice_channel
-    print(ctx)
-    print(ctx.message)
-    print(ctx.message.author)
-    print(ctx.message.author.voice)
+    channel = ctx.message.author.voice.channel
+    await channel.connect()
 
-    await client.join_voice_channel(channel)
+@client.command()
+async def leave(ctx):
+    await ctx.voice_client.disconnect()
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
+@client.command()
+async def dbug(ctx):
+    print("doing nothing")
 
+@client.command()
+async def quote(ctx):
     aika_quotes = ["The beginning is the end, and the end is the beginning. \
 Well then, let us begin again. And to each, their own tale.",
                    "The subtle light that is born when people's feelings come together. \
@@ -60,18 +61,27 @@ any tragedy may seem a comedy, as long as I am with them.",
                    "The beginning is the end, and the end is the beginning. Well then, \
 let us begin again. And to each, their own tale."
                    ]
+    await ctx.channel.send(random.choice(aika_quotes))
 
-    shakespeare_quotes = [
-        "The time is out of joint: O cursed spite / That ever I was born to set it right!* -- Hamlet",
-        "Forty thousand brothers / Could not with all their quantity of love / \
-Make up my sum.* -- Hamlet"
-    ]
 
-    if message.content == 'aika!':
-        response = random.choice(aika_quotes)
-        await message.channel.send(response)
-    if message.content == "shake!":
-        response = "*" + random.choice(shakespeare_quotes)
-        await message.channel.send(response)
+# @client.event
+# async def on_message(message):
+#     if message.author == client.user:
+#         return
+#
+#
+#
+#     shakespeare_quotes = [
+#         "The time is out of joint: O cursed spite / That ever I was born to set it right!* -- Hamlet",
+#         "Forty thousand brothers / Could not with all their quantity of love / \
+# Make up my sum.* -- Hamlet"
+#     ]
+#
+#     if message.content == 'aika!':
+#         response = random.choice(aika_quotes)
+#         await message.channel.send(response)
+#     if message.content == "shake!":
+#         response = "*" + random.choice(shakespeare_quotes)
+#         await message.channel.send(response)
 
 client.run(TOKEN)
