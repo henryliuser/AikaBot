@@ -83,20 +83,20 @@ async def shake(ctx):
 Make up my sum.* -- Hamlet"]
     await ctx.channel.send(random.choice(shakespeare_quotes))
 
-@client.command()
-async def play(ctx):
+def play(filename):
     global current_vc
     current_vc.stop()
-    current_vc.play(discord.FFmpegPCMAudio(source="test.wav"))
-    await ctx.channel.send("done playing")
+    current_vc.play(discord.FFmpegPCMAudio(source=filename))
+    # await ctx.channel.send("done playing")
 
 @client.command()
 async def listen(ctx):
     global current_vc
-    await ctx.channel.send("i'm listening")
-
-def wait_voice_command(ctx):
     with sr.Microphone() as source:
+        wait_voice_command(ctx, source)
+    # await ctx.channel.send("i'm listening")
+
+def wait_voice_command(ctx, source):
         audio = sp_recogizer.listen(source)
         text = sp_recogizer.recognize_google(audio).lower()
         # with open("temp_speech.wav", "wb") as file:  # don't need yet
@@ -104,17 +104,25 @@ def wait_voice_command(ctx):
         print(ctx.message.author, text)
         aika = text.find("aika")  # deal with 'ico' later
         if aika == -1: return
-        else: text = text[aika:]
-        for c in voice_commands.commands:
+        else: text = text[len('aika '):]
+        for c in voice_commands.commands.keys():
             loc = text.find(c)
-            if loc != -1:
+            if loc == -1: continue
+            left_arg = text[:loc].strip()
+            right_arg = text[loc+len(c):].strip()
+            speak(voice_commands.commands[c](left_arg, right_arg))
 
-                tts_engine.save_to_file("pussy", 'temp.wav')
-                tts_engine.runAndWait()
-                current_vc.play(discord.FFmpegPCMAudio(source='temp.wav'))
-                time.sleep(1)
-                os.remove('temp.wav')
-
+def speak(words):
+    fname = 'temp.wav'
+    # fname = f'{"".join(words.split())}.wav'
+    tts_engine.save_to_file(words, fname)
+    tts_engine.runAndWait()
+    time.sleep(2)
+    play(fname)
+    # current_vc.stop()
+    # current_vc.play(discord.FFmpegPCMAudio(source='temp.wav'))
+    time.sleep(0.1)
+    os.remove(fname)
 
 
 client.run(TOKEN)
