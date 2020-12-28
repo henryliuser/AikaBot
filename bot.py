@@ -2,8 +2,15 @@
 import os
 import random
 import discord
+import speech_recognition as sr
+import pyttsx3 as tts
+import time
+
 from discord.ext import commands
 from dotenv import load_dotenv
+
+import voice_commands
+
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -12,16 +19,15 @@ GUILD = os.getenv('DISCORD_GUILD')
 client = commands.Bot(command_prefix = '!')
 
 audio_source = discord.AudioSource()
-# voice_channel = discord.VoiceChannel()
+current_vc = None
 
-# @voice_channel.event
-# async def on_ready():
-#     print("yeehaw")
+tts_engine = tts.init()
+sp_recogizer = sr.Recognizer()
 
 @client.event
 async def on_ready():
     guild = discord.utils.get(client.guilds, name=GUILD)
-    await guild.channels[2].send("what up bitches")
+    # await guild.channels[1].send("I'm in.")
     print(
         f'{client.user} is connected to the following guild:\n'
         f'{guild.name}(id: {guild.id})'
@@ -29,8 +35,14 @@ async def on_ready():
 
 @client.command()
 async def join(ctx):
+    global current_vc
+    v = ctx.message.author.voice
+    if v == None:
+        await ctx.channel.send("You gotta be in a voice channel")
     channel = ctx.message.author.voice.channel
-    await channel.connect()
+
+    current_vc = await channel.connect()
+
 
 @client.command()
 async def leave(ctx):
@@ -38,7 +50,7 @@ async def leave(ctx):
 
 @client.command()
 async def dbug(ctx):
-    print("doing nothing")
+    print("debugging")
 
 @client.command()
 async def quote(ctx):
@@ -63,25 +75,46 @@ let us begin again. And to each, their own tale."
                    ]
     await ctx.channel.send(random.choice(aika_quotes))
 
+@client.command()
+async def shake(ctx):
+    shakespeare_quotes = [
+        "The time is out of joint: O cursed spite / That ever I was born to set it right!* -- Hamlet",
+        "Forty thousand brothers / Could not with all their quantity of love / \
+Make up my sum.* -- Hamlet"]
+    await ctx.channel.send(random.choice(shakespeare_quotes))
 
-# @client.event
-# async def on_message(message):
-#     if message.author == client.user:
-#         return
-#
-#
-#
-#     shakespeare_quotes = [
-#         "The time is out of joint: O cursed spite / That ever I was born to set it right!* -- Hamlet",
-#         "Forty thousand brothers / Could not with all their quantity of love / \
-# Make up my sum.* -- Hamlet"
-#     ]
-#
-#     if message.content == 'aika!':
-#         response = random.choice(aika_quotes)
-#         await message.channel.send(response)
-#     if message.content == "shake!":
-#         response = "*" + random.choice(shakespeare_quotes)
-#         await message.channel.send(response)
+@client.command()
+async def play(ctx):
+    global current_vc
+    current_vc.stop()
+    current_vc.play(discord.FFmpegPCMAudio(source="test.wav"))
+    await ctx.channel.send("done playing")
+
+@client.command()
+async def listen(ctx):
+    global current_vc
+    await ctx.channel.send("i'm listening")
+
+def wait_voice_command(ctx):
+    with sr.Microphone() as source:
+        audio = sp_recogizer.listen(source)
+        text = sp_recogizer.recognize_google(audio).lower()
+        # with open("temp_speech.wav", "wb") as file:  # don't need yet
+        #     file.write(audio.get_wav_data())
+        print(ctx.message.author, text)
+        aika = text.find("aika")  # deal with 'ico' later
+        if aika == -1: return
+        else: text = text[aika:]
+        for c in voice_commands.commands:
+            loc = text.find(c)
+            if loc != -1:
+
+                tts_engine.save_to_file("pussy", 'temp.wav')
+                tts_engine.runAndWait()
+                current_vc.play(discord.FFmpegPCMAudio(source='temp.wav'))
+                time.sleep(1)
+                os.remove('temp.wav')
+
+
 
 client.run(TOKEN)
