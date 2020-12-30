@@ -1,5 +1,6 @@
 import speech_recognition as sr
 import pyttsx3 as tts
+import voice_commands
 
 r = sr.Recognizer()
 engine = tts.init()
@@ -28,7 +29,42 @@ def loop_echo() -> None:
     engine.say("take care")
     engine.runAndWait()
 
-loop_echo()
+def hotword_hack(text):
+    close = ['aika', 'debug', 'ikea', 'iker', 'ico', 'ayto']
+    for w in close:
+        idx = text.find(w)
+        if idx != -1: return idx
+    return -1
+
+def take_voice_command(ctx, source):
+    audio = r.listen(source)
+    try:
+        text = r.recognize_google(audio).lower()
+        print(text)
+    except:
+        print("unknown")
+        return
+    # with open("temp_speech.wav", "wb") as file:  # don't need yet
+    #     file.write(audio.get_wav_data())
+    # print(ctx.message.author, text)
+    aika = hotword_hack(text)
+    if aika == -1: return
+    else: text = text[len('aika '):]
+
+    for c in voice_commands.commands.keys():
+        loc = text.find(c)
+        if loc == -1: continue
+        left_arg = text[:loc].strip()
+        right_arg = text[loc + len(c):].strip()
+        return voice_commands.commands[c](left_arg, right_arg)
+
+if __name__ == '__main__':
+    # loop_echo()
+    with sr.Microphone() as source:
+        while True:
+            print(take_voice_command(5, source))
+
+
 # with sr.AudioFile("test.wav") as source:
 #     audio = r.record(source)
 #     # try:

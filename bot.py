@@ -4,13 +4,13 @@ import random
 import discord
 import speech_recognition as sr
 import pyttsx3 as tts
-import time
+import importlib  # hack around tts bugs
 
 from discord.ext import commands
 from dotenv import load_dotenv
 
+import speech_input
 import voice_commands
-
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -21,8 +21,7 @@ client = commands.Bot(command_prefix = '!')
 audio_source = discord.AudioSource()
 current_vc = None
 
-tts_engine = tts.init()
-sp_recogizer = sr.Recognizer()
+# tts_engine = tts.init()
 
 @client.event
 async def on_ready():
@@ -54,26 +53,7 @@ async def dbug(ctx):
 
 @client.command()
 async def quote(ctx):
-    aika_quotes = ["The beginning is the end, and the end is the beginning. \
-Well then, let us begin again. And to each, their own tale.",
-                   "The subtle light that is born when people's feelings come together. \
-That light embraces felicity, evil, sin, and happiness. The light blazes forth... \
-illuminating the whole truth.",
-                   "Just because it's illogical, that doesn't make it wrong.",
-                   "Summer stars are so unscrupulous. They shine without thought or care. \
-They try so hard to display their radiance. Trying to let us know they exist before they disappear. \
-I admire that simple, honest wish.",
-                   "Everything happens for a reason. The daily tragedies and misfortunes are all \
-meaningful events, leading toward an ideal conclusion. With that in mind, there probably isn't \
-really any meaningless misfortune.",
-                   "The actors on stage cannot ignore their scripts and do as they wish. If they \
-make a beautiful exit, I feel they fulfill their role.",
-                   "It might be for the better if there are amusing people around me. Because \
-any tragedy may seem a comedy, as long as I am with them.",
-                   "The beginning is the end, and the end is the beginning. Well then, \
-let us begin again. And to each, their own tale."
-                   ]
-    await ctx.channel.send(random.choice(aika_quotes))
+    await ctx.channel.send(voice_commands.quote())
 
 @client.command()
 async def shake(ctx):
@@ -93,36 +73,30 @@ def play(filename):
 async def listen(ctx):
     global current_vc
     with sr.Microphone() as source:
-        wait_voice_command(ctx, source)
-    # await ctx.channel.send("i'm listening")
-
-def wait_voice_command(ctx, source):
-        audio = sp_recogizer.listen(source)
-        text = sp_recogizer.recognize_google(audio).lower()
-        # with open("temp_speech.wav", "wb") as file:  # don't need yet
-        #     file.write(audio.get_wav_data())
-        print(ctx.message.author, text)
-        aika = text.find("aika")  # deal with 'ico' later
-        if aika == -1: return
-        else: text = text[len('aika '):]
-        for c in voice_commands.commands.keys():
-            loc = text.find(c)
-            if loc == -1: continue
-            left_arg = text[:loc].strip()
-            right_arg = text[loc+len(c):].strip()
-            speak(voice_commands.commands[c](left_arg, right_arg))
+        await ctx.channel.send("i'm listening")
+        while True:
+            result = speech_input.take_voice_command(ctx, source)
+            print(ctx.author, result)
+            if not result: pass
+            elif result.find("farewell") != -1:
+                await ctx.channel.send("goodbye!")
+                await leave(ctx)
+                return
+            elif result.find("stop") != -1:
+                await ctx.channel.send("no longer listening")
+                return
+            else: speak(result)
 
 def speak(words):
     fname = 'temp.wav'
-    # fname = f'{"".join(words.split())}.wav'
+    importlib.reload(tts)
+    tts_engine = tts.Engine()
     tts_engine.save_to_file(words, fname)
     tts_engine.runAndWait()
-    time.sleep(2)
     play(fname)
-    # current_vc.stop()
-    # current_vc.play(discord.FFmpegPCMAudio(source='temp.wav'))
-    time.sleep(0.1)
-    os.remove(fname)
+    # time.sleep(0.2)
+    # os.remove(fname)
+
 
 
 client.run(TOKEN)
